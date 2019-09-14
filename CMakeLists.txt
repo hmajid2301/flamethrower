@@ -44,6 +44,7 @@ add_compile_options(-Wall)
 find_package(PkgConfig)
 
 pkg_search_module(LIBLDNS REQUIRED libldns ldns)
+pkg_search_module(LIBNGHTTP2 REQUIRED nghttp2 libnghttp2)
 pkg_check_modules(LIBUV REQUIRED libuv)
 pkg_check_modules(LIBGNUTLS REQUIRED gnutls>=3.3)
 
@@ -53,6 +54,8 @@ pkg_check_modules(LIBGNUTLS REQUIRED gnutls>=3.3)
 
 add_library(flamecore
         flame/http.h
+        flame/httpssession.cpp
+        flame/httpssession.h
         flame/metrics.cpp
         flame/metrics.h
         flame/query.cpp
@@ -70,6 +73,7 @@ target_include_directories(flamecore
         PUBLIC ${LIBUV_INCLUDE_DIRS}
         PUBLIC ${LIBLDNS_INCLUDE_DIRS}
         PRIVATE ${LIBGNUTLS_INCLUDE_DIRS}
+        PRIVATE ${LIBNGHTTP2_INCLUDE_DIRS}
         PUBLIC "${CMAKE_SOURCE_DIR}/3rd/base64url"
         PUBLIC "${CMAKE_SOURCE_DIR}/3rd/TokenBucket"
         PUBLIC "${CMAKE_SOURCE_DIR}/3rd/docopt.cpp"
@@ -85,6 +89,8 @@ target_link_libraries(flamecore
         PRIVATE ${LIBLDNS_LIBRARIES}
         PRIVATE ${LIBGNUTLS_LDFLAGS}
         PRIVATE ${LIBGNUTLS_LIBRARIES}
+        PRIVATE ${LIBNGHTTP2_LDFLAGS}
+        PRIVATE ${LIBNGHTTP2_LIBRARIES}
         )
 
 add_executable(flame

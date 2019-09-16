@@ -109,6 +109,11 @@ void TrafGen::start_tcp_session()
                                   size_t size) {
         process_wire(data.get(), size);
     };
+
+	auto got_handshake = [this]() {
+		_metrics->set_tls_handshake(_tls_handshake_time);
+	};
+
     auto connection_ready = [this]() {
         /** SEND DATA **/
         uint16_t id{0};
@@ -161,7 +166,7 @@ void TrafGen::start_tcp_session()
     } else if(_traf_config->protocol == Protocol::TCPTLS) {
         _tcp_session = std::make_shared<TCPTLSSession>(_tcp_handle, malformed_data, got_dns_message, connection_ready, malformed_data);
     } else {
-        _tcp_session = std::make_shared<HTTPSSession>(_tcp_handle, malformed_data, got_dns_message, connection_ready, malformed_data, current_target, _traf_config->method);
+        _tcp_session = std::make_shared<HTTPSSession>(_tcp_handle, malformed_data, got_dns_message, connection_ready, got_handshake, malformed_data, current_target, _traf_config->method);
     }
 
     if (!_tcp_session->setup()) {
@@ -218,13 +223,16 @@ void TrafGen::start_tcp_session()
 
     // SOCKET: on connect
     _tcp_handle->on<uvw::ConnectEvent>([this](uvw::ConnectEvent &event, uvw::TcpHandle &h) {
+		_tls_handshake_time = std::chrono::high_resolution_clock::now();
         _tcp_session->on_connect_event();
+		_metrics->set_tcp_handshake(_tcp_handshake_time);
         _metrics->tcp_connection();
 
         // start reading from incoming stream, fires DataEvent when receiving
         _tcp_handle->read();
     });
 
+	_tcp_handshake_time = std::chrono::high_resolution_clock::now();
     // fires ConnectEvent when connected
     if (_traf_config->family == AF_INET) {
         _tcp_handle->connect<uvw::IPv4>(current_target.address, _traf_config->port);

@@ -65,6 +65,11 @@ class TrafGen
 
     // a hash of in flight queries, keyed by query id
     std::unordered_map<uint16_t, Query> _in_flight;
+
+	// handshake times
+    std::chrono::high_resolution_clock::time_point _tcp_handshake_time;
+	std::chrono::high_resolution_clock::time_point _tls_handshake_time;
+
     // a randomized list of query ids that are not currently in flight
     std::vector<uint16_t> _free_id_list;
 

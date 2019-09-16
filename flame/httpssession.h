@@ -33,11 +33,13 @@ class HTTPSSession : public TCPSession
 public:
     using log_send_cb = std::function<void(int32_t id)>;
     using handshake_error_cb =  std::function<void()>;
+	using got_handshake_cb = std::function<void()>;
 
     HTTPSSession(std::shared_ptr<uvw::TcpHandle> handle,
                 TCPSession::malformed_data_cb malformed_data_handler,
                 TCPSession::got_dns_msg_cb got_dns_msg_handler,
                 TCPSession::connection_ready_cb connection_ready_handler,
+				got_handshake_cb got_handshake,
                 handshake_error_cb handshake_error_handler,
                 Target target,
                 HTTPMethod method);
@@ -78,6 +80,7 @@ private:
     got_dns_msg_cb _got_dns_msg;
     std::shared_ptr<uvw::TcpHandle> _handle;
     enum class LinkState { HANDSHAKE, DATA, CLOSE } _tls_state;
+	got_handshake_cb _got_handshake;
     handshake_error_cb _handshake_error;
     Target _target;
     HTTPMethod _method;

@@ -20,11 +20,12 @@ HTTPSSession::HTTPSSession(std::shared_ptr<uvw::TcpHandle> handle,
                             TCPSession::malformed_data_cb malformed_data_handler,
                             TCPSession::got_dns_msg_cb got_dns_msg_handler,
                             TCPSession::connection_ready_cb connection_ready_handler,
+							got_handshake_cb got_handshake,
                             handshake_error_cb handshake_error_handler, 
                             Target target,
                             HTTPMethod method)
     : TCPSession(handle, malformed_data_handler, got_dns_msg_handler, connection_ready_handler),
-      _malformed_data{malformed_data_handler}, _got_dns_msg{got_dns_msg_handler}, _handle{handle}, _tls_state{LinkState::HANDSHAKE}, _handshake_error{handshake_error_handler}, _target{target}, _method{method}
+      _malformed_data{malformed_data_handler}, _got_dns_msg{got_dns_msg_handler}, _handle{handle}, _tls_state{LinkState::HANDSHAKE}, _got_handshake{got_handshake}, _handshake_error{handshake_error_handler}, _target{target}, _method{method}
 {
 }
 
@@ -273,7 +274,7 @@ int HTTPSSession::session_send()
 
 void HTTPSSession::on_connect_event()
 {
-    initiate_session_data();
+    //initiate_session_data();
     do_handshake();
 }
 
@@ -397,6 +398,8 @@ void HTTPSSession::do_handshake()
 {
     int err = gnutls_handshake(_gnutls_session);
     if (err == GNUTLS_E_SUCCESS) {
+		_got_handshake();
+		initiate_session_data();
         gnutls_datum_t alpn;
         alpn.data = (unsigned char *)"h2";
         alpn.size = 2;
@@ -416,7 +419,7 @@ void HTTPSSession::do_handshake()
         std::cerr << "Handshake failed: " << gnutls_strerror(err) << std::endl;
         _handshake_error();
     } else if (err != GNUTLS_E_AGAIN && err != GNUTLS_E_INTERRUPTED) {
-        std::cout << "Handshake " << gnutls_strerror(err) << std::endl;
+        std::cout << "Handshake: " << gnutls_strerror(err) << std::endl;
     }
 }
 

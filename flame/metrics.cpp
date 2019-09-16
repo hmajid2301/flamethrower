@@ -244,6 +244,8 @@ void MetricsMgr::aggregate_trafgen(const Metrics *m)
     if (_per_trafgen_metrics && _metric_file.is_open()) {
         // record per trafgen metrics to out file
         json j;
+		j["tcp_handshake"] = m->_period_tcp_latency_handshake;
+		j["tls_handshake"] = m->_period_tls_latency_handshake;
         j["period_s_count"] = m->_period_s_count;
         j["period_r_count"] = m->_period_r_count;
         j["run_id"] = _run_id;
@@ -339,6 +341,22 @@ void Metrics::bad_receive(u_long in_f)
     _period_r_count++;
 }
 
+void Metrics::set_tcp_handshake(const std::chrono::high_resolution_clock::time_point &tcp)
+{
+	auto now = std::chrono::high_resolution_clock::now();
+	auto tcp_latency = now - tcp;
+	double tcp_latency_ms = tcp_latency.count() * Metrics::HR_TO_MSEC_MULT;
+	_period_tcp_latency_handshake = tcp_latency_ms;
+}
+
+void Metrics::set_tls_handshake(const std::chrono::high_resolution_clock::time_point &tls)
+{
+	auto now = std::chrono::high_resolution_clock::now();
+	auto tls_latency = now - tls;
+	double tls_latency_ms = tls_latency.count() * Metrics::HR_TO_MSEC_MULT;
+	_period_tls_latency_handshake = tls_latency_ms;
+}
+
 void Metrics::receive(const std::chrono::high_resolution_clock::time_point &rcv_time, uint8_t rcode, u_long in_f)
 {
     auto now = std::chrono::high_resolution_clock::now();
@@ -361,7 +379,7 @@ void Metrics::reset_periodic_stats()
 {
     // reset counters for period
     _period_r_count = _period_s_count = _period_bad_count = _period_net_errors = _period_timeouts = _period_tcp_connections = 0;
-    _period_response_avg_ms = _period_response_max_ms = _period_response_min_ms = _period_pkt_size_avg = 0.0;
+    _period_response_avg_ms = _period_response_max_ms = _period_response_min_ms = _period_pkt_size_avg = _period_tcp_latency_handshake = _period_tls_latency_handshake = 0.0;
     _response_codes.clear();
 }
 

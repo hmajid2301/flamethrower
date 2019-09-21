@@ -139,6 +139,7 @@ class Metrics
     double _period_pkt_size_avg{0.0};
 	double _period_tcp_latency_handshake{0.0};
 	double _period_tls_latency_handshake{0.0};
+	std::vector<double> _period_response_arr_ms;
 
     // updated during operations that adjust in_flight like send, recv, timeout
     u_long _in_flight{0};

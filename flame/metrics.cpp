@@ -257,6 +257,7 @@ void MetricsMgr::aggregate_trafgen(const Metrics *m)
         j["period_response_avg_ms"] = m->_period_response_avg_ms;
         j["period_response_min_ms"] = m->_period_response_min_ms;
         j["period_response_max_ms"] = m->_period_response_max_ms;
+		j["period_response_arr_ms"] = m->_period_response_arr_ms;
         j["period_net_errors"] = m->_period_net_errors;
         j["period_tcp_connections"] = m->_period_tcp_connections;
         j["pkt_size_avg"] = m->_period_pkt_size_avg;
@@ -362,6 +363,7 @@ void Metrics::receive(const std::chrono::high_resolution_clock::time_point &rcv_
     auto now = std::chrono::high_resolution_clock::now();
     auto q_latency = now - rcv_time;
     double q_latency_ms = q_latency.count() * Metrics::HR_TO_MSEC_MULT;
+	_period_response_arr_ms.push_back(q_latency_ms);
     _in_flight = in_f;
     _response_codes[rcode]++;
     _total_r_count++;
@@ -381,6 +383,7 @@ void Metrics::reset_periodic_stats()
     _period_r_count = _period_s_count = _period_bad_count = _period_net_errors = _period_timeouts = _period_tcp_connections = 0;
     _period_response_avg_ms = _period_response_max_ms = _period_response_min_ms = _period_pkt_size_avg = _period_tcp_latency_handshake = _period_tls_latency_handshake = 0.0;
     _response_codes.clear();
+	_period_response_arr_ms.clear();
 }
 
 void Metrics::trafgen_id(u_int port)

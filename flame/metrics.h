@@ -47,6 +47,11 @@ class MetricsMgr
 
     // times we've aggregated (used in avg calcs)
     u_long _aggregate_count{0};
+    
+    // times response has been under 100ms, 10ms and 1ms
+    u_long _aggregate_count_100ms{0};
+    u_long _aggregate_count_10ms{0};
+    u_long _aggregate_count_1ms{0};
 
     // aggregated totals throughout entire run
     u_long _agg_total_r_count{0};

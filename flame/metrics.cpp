@@ -81,6 +81,9 @@ void MetricsMgr::flush_to_disk()
     update_runtime();
     json j;
     j["period_number"] = _aggregate_count;
+    j["period_number_1ms"] = _aggregate_count_1ms;
+    j["period_number_10ms"] = _aggregate_count_10ms;
+    j["period_number_100ms"] = _aggregate_count_100ms;
     j["total_s_count"] = _agg_total_s_count;
     j["total_r_count"] = _agg_total_r_count;
     j["period_timeouts"] = _agg_period_timeouts;
@@ -113,19 +116,22 @@ void MetricsMgr::display_final_text()
 {
     std::cout << std::endl;
     std::cout << "------" << std::endl;
-    std::cout << "run id      : " << _run_id << std::endl;
-    std::cout << "run start   : " << _start_ts << std::endl;
-    std::cout << "runtime     : " << _runtime_s << " s" << std::endl;
-    std::cout << "total sent  : " << _agg_total_s_count << std::endl;
-    std::cout << "total rcvd  : " << _agg_total_r_count << std::endl;
-    std::cout << "min resp    : " << _agg_total_response_min_ms << " ms" << std::endl;
-    std::cout << "avg resp    : " << _agg_total_response_avg_ms << " ms" << std::endl;
-    std::cout << "max resp    : " << _agg_total_response_max_ms << " ms" << std::endl;
-    std::cout << "avg r qps   : " << _agg_total_qps_r_avg << std::endl;
-    std::cout << "avg s qps   : " << _agg_total_qps_s_avg << std::endl;
-    std::cout << "avg pkt     : " << _agg_total_pkt_size_avg << " bytes" << std::endl;
-    std::cout << "tcp conn.   : " << _agg_total_tcp_connections << std::endl;
-    std::cout << "timeouts    : " << _agg_total_timeouts << " ("
+    std::cout << "run id         : " << _run_id << std::endl;
+    std::cout << "run start      : " << _start_ts << std::endl;
+    std::cout << "runtime        : " << _runtime_s << " s" << std::endl;
+    std::cout << "total sent     : " << _agg_total_s_count << std::endl;
+    std::cout << "total rcvd     : " << _agg_total_r_count << std::endl;
+    std::cout << "total < 1ms    : " << _aggregate_count_1ms << std::endl;
+    std::cout << "total < 10ms   : " << _aggregate_count_10ms << std::endl;
+    std::cout << "total < 100ms  : " << _aggregate_count_100ms << std::endl;
+    std::cout << "min resp       : " << _agg_total_response_min_ms << " ms" << std::endl;
+    std::cout << "avg resp       : " << _agg_total_response_avg_ms << " ms" << std::endl;
+    std::cout << "max resp       : " << _agg_total_response_max_ms << " ms" << std::endl;
+    std::cout << "avg r qps      : " << _agg_total_qps_r_avg << std::endl;
+    std::cout << "avg s qps      : " << _agg_total_qps_s_avg << std::endl;
+    std::cout << "avg pkt        : " << _agg_total_pkt_size_avg << " bytes" << std::endl;
+    std::cout << "tcp conn.      : " << _agg_total_tcp_connections << std::endl;
+    std::cout << "timeouts       : " << _agg_total_timeouts << " ("
               << (((double)_agg_total_timeouts / _agg_total_s_count) * 100) << "%) " << std::endl;
     std::cout << "bad recv    : " << _agg_total_bad_count << std::endl;
     std::cout << "net errors  : " << _agg_total_net_errors << std::endl;
@@ -250,6 +256,9 @@ void MetricsMgr::aggregate_trafgen(const Metrics *m)
         // record per trafgen metrics to out file
         json j;
         j["period_number"] = _aggregate_count;
+        j["period_number_1ms"] = _aggregate_count_1ms;
+        j["period_number_10ms"] = _aggregate_count_10ms;
+        j["period_number_100ms"] = _aggregate_count_100ms;
         j["period_s_count"] = m->_period_s_count;
         j["period_r_count"] = m->_period_r_count;
         j["run_id"] = _run_id;
@@ -273,6 +282,10 @@ void MetricsMgr::aggregate_trafgen(const Metrics *m)
     // aggregate this trafgen
     _agg_total_r_count += m->_period_r_count;
     _agg_total_s_count += m->_period_s_count;
+
+    _aggregate_count_1ms += m->_total_count_1ms;
+    _aggregate_count_10ms += m->_total_count_10ms;
+    _aggregate_count_100ms += m->_total_count_100ms;
 
     _agg_period_s_count += m->_period_s_count;
     _agg_period_r_count += m->_period_r_count;
@@ -360,6 +373,15 @@ void Metrics::receive(const std::chrono::high_resolution_clock::time_point &rcv_
     }
     if (_period_response_min_ms == 0 || q_latency_ms < _period_response_min_ms) {
         _period_response_min_ms = q_latency_ms;
+    }
+    if(q_latency_ms <= 1) {
+        _total_count_1ms++;
+    }
+    else if (q_latency_ms <= 10) {
+        _total_count_10ms++;
+    }
+    else if (q_latency_ms <= 100) {
+        _total_count_100ms++;
     }
 }
 

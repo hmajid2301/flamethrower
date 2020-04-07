@@ -129,6 +129,9 @@ class Metrics
     // total sends entire lifetime
     u_long _total_r_count{0};
     u_long _total_s_count{0};
+    u_long _total_count_100ms{0};
+    u_long _total_count_10ms{0};
+    u_long _total_count_1ms{0};
 
     // period counters, reset each flush to MetricsMgr
     u_long _period_r_count{0};

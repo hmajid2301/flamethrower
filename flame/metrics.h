@@ -47,11 +47,11 @@ class MetricsMgr
 
     // times we've aggregated (used in avg calcs)
     u_long _aggregate_count{0};
-    
+
     // times response has been under 100ms, 10ms and 1ms
-    u_long _aggregate_count_100ms{0};
-    u_long _aggregate_count_10ms{0};
-    u_long _aggregate_count_1ms{0};
+    u_long _agg_total_100ms_count{0};
+    u_long _agg_total_10ms_count{0};
+    u_long _agg_total_1ms_count{0};
 
     // aggregated totals throughout entire run
     u_long _agg_total_r_count{0};
@@ -129,11 +129,11 @@ class Metrics
     // total sends entire lifetime
     u_long _total_r_count{0};
     u_long _total_s_count{0};
-    u_long _total_count_100ms{0};
-    u_long _total_count_10ms{0};
-    u_long _total_count_1ms{0};
 
     // period counters, reset each flush to MetricsMgr
+    u_long _period_count_100ms{0};
+    u_long _period_count_10ms{0};
+    u_long _period_count_1ms{0};
     u_long _period_r_count{0};
     u_long _period_s_count{0};
     u_long _period_bad_count{0};

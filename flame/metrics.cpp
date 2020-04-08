@@ -81,9 +81,9 @@ void MetricsMgr::flush_to_disk()
     update_runtime();
     json j;
     j["period_number"] = _aggregate_count;
-    j["period_number_1ms"] = _aggregate_count_1ms;
-    j["period_number_10ms"] = _aggregate_count_10ms;
-    j["period_number_100ms"] = _aggregate_count_100ms;
+    j["period_number_1ms"] = _agg_total_1ms_count;
+    j["period_number_10ms"] = _agg_total_10ms_count;
+    j["period_number_100ms"] = _agg_total_100ms_count;
     j["total_s_count"] = _agg_total_s_count;
     j["total_r_count"] = _agg_total_r_count;
     j["period_timeouts"] = _agg_period_timeouts;
@@ -121,9 +121,9 @@ void MetricsMgr::display_final_text()
     std::cout << "runtime        : " << _runtime_s << " s" << std::endl;
     std::cout << "total sent     : " << _agg_total_s_count << std::endl;
     std::cout << "total rcvd     : " << _agg_total_r_count << std::endl;
-    std::cout << "total < 1ms    : " << _aggregate_count_1ms << std::endl;
-    std::cout << "total < 10ms   : " << _aggregate_count_10ms << std::endl;
-    std::cout << "total < 100ms  : " << _aggregate_count_100ms << std::endl;
+    std::cout << "total < 1ms    : " << _agg_total_1ms_count << std::endl;
+    std::cout << "total < 10ms   : " << _agg_total_10ms_count << std::endl;
+    std::cout << "total < 100ms  : " << _agg_total_100ms_count << std::endl;
     std::cout << "min resp       : " << _agg_total_response_min_ms << " ms" << std::endl;
     std::cout << "avg resp       : " << _agg_total_response_avg_ms << " ms" << std::endl;
     std::cout << "max resp       : " << _agg_total_response_max_ms << " ms" << std::endl;
@@ -256,9 +256,9 @@ void MetricsMgr::aggregate_trafgen(const Metrics *m)
         // record per trafgen metrics to out file
         json j;
         j["period_number"] = _aggregate_count;
-        j["period_number_1ms"] = _aggregate_count_1ms;
-        j["period_number_10ms"] = _aggregate_count_10ms;
-        j["period_number_100ms"] = _aggregate_count_100ms;
+        j["period_number_1ms"] = m->_period_count_1ms;
+        j["period_number_10ms"] = m->_period_count_10ms;
+        j["period_number_100ms"] = m->_period_count_100ms;
         j["period_s_count"] = m->_period_s_count;
         j["period_r_count"] = m->_period_r_count;
         j["run_id"] = _run_id;
@@ -283,9 +283,9 @@ void MetricsMgr::aggregate_trafgen(const Metrics *m)
     _agg_total_r_count += m->_period_r_count;
     _agg_total_s_count += m->_period_s_count;
 
-    _aggregate_count_1ms += m->_total_count_1ms;
-    _aggregate_count_10ms += m->_total_count_10ms;
-    _aggregate_count_100ms += m->_total_count_100ms;
+    _agg_total_1ms_count += m->_period_count_1ms;
+    _agg_total_10ms_count += m->_period_count_10ms;
+    _agg_total_100ms_count += m->_period_count_100ms;
 
     _agg_period_s_count += m->_period_s_count;
     _agg_period_r_count += m->_period_r_count;
@@ -374,21 +374,19 @@ void Metrics::receive(const std::chrono::high_resolution_clock::time_point &rcv_
     if (_period_response_min_ms == 0 || q_latency_ms < _period_response_min_ms) {
         _period_response_min_ms = q_latency_ms;
     }
-    if(q_latency_ms <= 1) {
-        _total_count_1ms++;
-    }
-    else if (q_latency_ms <= 10) {
-        _total_count_10ms++;
-    }
-    else if (q_latency_ms <= 100) {
-        _total_count_100ms++;
+    if (q_latency_ms <= 1) {
+        _period_count_1ms++;
+    } else if (q_latency_ms <= 10) {
+        _period_count_10ms++;
+    } else if (q_latency_ms <= 100) {
+        _period_count_100ms++;
     }
 }
 
 void Metrics::reset_periodic_stats()
 {
     // reset counters for period
-    _period_r_count = _period_s_count = _period_bad_count = _period_net_errors = _period_timeouts = _period_tcp_connections = 0;
+    _period_r_count = _period_s_count = _period_bad_count = _period_net_errors = _period_timeouts = _period_tcp_connections = _period_count_1ms = _period_count_10ms = _period_count_100ms = 0;
     _period_response_avg_ms = _period_response_max_ms = _period_response_min_ms = _period_pkt_size_avg = 0.0;
     _response_codes.clear();
 }

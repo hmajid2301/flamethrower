@@ -147,7 +147,7 @@ void flow_change(std::queue<std::pair<uint64_t, uint64_t>> qps_flow,
         return;
     auto loop = uvw::Loop::getDefault();
     auto qps_timer = loop->resource<uvw::TimerHandle>();
-    qps_timer->on<uvw::TimerEvent>([qps_flow, rl_list, verbosity, c_count](const auto& event, auto& handle) {
+    qps_timer->on<uvw::TimerEvent>([qps_flow, rl_list, verbosity, c_count](const auto &event, auto &handle) {
         handle.stop();
         flow_change(qps_flow, rl_list, verbosity, c_count);
     });
@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
     } else if (args["-P"].asString() == "udp") {
         proto = Protocol::UDP;
     } else {
-        std::cerr << "protocol must be 'udp', 'tcp', dot' or 'https'" << std::endl;
+        std::cerr << "protocol must be 'udp', 'tcp', dot' or 'doh'" << std::endl;
         return 1;
     }
 
@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
     }
 
     HTTPMethod method{HTTPMethod::GET};
-    if(args["-M"].asString() == "POST") {
+    if (args["-M"].asString() == "POST") {
         method = HTTPMethod::POST;
     }
 
@@ -282,11 +282,11 @@ int main(int argc, char *argv[])
         uvw::Addr addr;
         struct http_parser_url parsed = {};
         std::string url = raw_target_list[i];
-        if(url.rfind("https://", 0) != 0) {
+        if (url.rfind("https://", 0) != 0) {
             url.insert(0, "https://");
         }
         int ret = http_parser_parse_url(url.c_str(), strlen(url.c_str()), 0, &parsed);
-        if(ret != 0) {
+        if (ret != 0) {
             std::cerr << "could not parse url: " << url << std::endl;
             return 1;
         }
@@ -463,15 +463,14 @@ int main(int argc, char *argv[])
         std::cout << "flaming target(s) [";
         for (uint i = 0; i < 3; i++) {
             std::cout << traf_config->target_list[i].address;
-            if (i == traf_config->target_list.size()-1) {
+            if (i == traf_config->target_list.size() - 1) {
                 break;
-            }
-            else {
+            } else {
                 std::cout << ", ";
             }
         }
         if (traf_config->target_list.size() > 3) {
-            std::cout << "and " << traf_config->target_list.size()-3 << " more";
+            std::cout << "and " << traf_config->target_list.size() - 3 << " more";
         }
         std::cout << "] on port "
                   << args["-p"].asLong()
@@ -483,8 +482,7 @@ int main(int argc, char *argv[])
             std::cout << "query list randomized" << std::endl;
         }
         if (config->rate_limit()) {
-            std::cout << "rate limit @ " << config->rate_limit() << " QPS (" << (config->rate_limit() / c_count) <<
-            " QPS per concurrent sender)" << std::endl;
+            std::cout << "rate limit @ " << config->rate_limit() << " QPS (" << (config->rate_limit() / c_count) << " QPS per concurrent sender)" << std::endl;
         }
     }
 

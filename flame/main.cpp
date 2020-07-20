@@ -201,7 +201,12 @@ int main(int argc, char *argv[])
         if (args["-P"].asString() == "dot" || args["-P"].asString() == "tcptls") {
             proto = Protocol::DOT;
         } else if (args["-P"].asString() == "doh") {
+#ifdef DOH_ENABLE
             proto = Protocol::DOH;
+#else
+			std::cerr << "DNS over HTTPS (DoH) support is not enabled" << std::endl;
+			return 1;
+#endif
         } else {
             proto = Protocol::TCP;
         }
@@ -221,16 +226,20 @@ int main(int argc, char *argv[])
     if (!args["-p"]) {
         if (proto == Protocol::DOT)
             args["-p"] = std::string("853");
+#ifdef DOH_ENABLE
         else if (proto == Protocol::DOH)
             args["-p"] = std::string("443");
+#endif
         else
             args["-p"] = std::string("53");
     }
 
+#ifdef DOH_ENABLE
     HTTPMethod method{HTTPMethod::GET};
-    if (args["-M"].asString() == "POST") {
+    if(args["-M"].asString() == "POST") {
         method = HTTPMethod::POST;
     }
+#endif
 
     auto runtime_limit = args["-l"].asLong();
 
@@ -282,11 +291,11 @@ int main(int argc, char *argv[])
         uvw::Addr addr;
         struct http_parser_url parsed = {};
         std::string url = raw_target_list[i];
-        if (url.rfind("https://", 0) != 0) {
+        if(url.rfind("https://", 0) != 0) {
             url.insert(0, "https://");
         }
         int ret = http_parser_parse_url(url.c_str(), strlen(url.c_str()), 0, &parsed);
-        if (ret != 0) {
+        if(ret != 0) {
             std::cerr << "could not parse url: " << url << std::endl;
             return 1;
         }
@@ -384,7 +393,9 @@ int main(int argc, char *argv[])
     traf_config->port = static_cast<unsigned int>(args["-p"].asLong());
     traf_config->s_delay = s_delay;
     traf_config->protocol = proto;
+#ifdef DOH_ENABLE
     traf_config->method = method;
+#endif
     traf_config->r_timeout = args["-t"].asLong();
 
     std::vector<std::shared_ptr<TrafGen>> throwers;
@@ -463,14 +474,14 @@ int main(int argc, char *argv[])
         std::cout << "flaming target(s) [";
         for (uint i = 0; i < 3; i++) {
             std::cout << traf_config->target_list[i].address;
-            if (i == traf_config->target_list.size() - 1) {
+            if (i == traf_config->target_list.size()-1) {
                 break;
             } else {
                 std::cout << ", ";
             }
         }
         if (traf_config->target_list.size() > 3) {
-            std::cout << "and " << traf_config->target_list.size() - 3 << " more";
+            std::cout << "and " << traf_config->target_list.size()-3 << " more";
         }
         std::cout << "] on port "
                   << args["-p"].asLong()
